@@ -163,7 +163,7 @@ VideoEncoderNvenc::VideoEncoderNvenc(wivrn_vk_bundle & vk, const encoder_setting
 	NV_ENC_CONFIG params = preset_config.presetCfg;
 
 	// Bitrate control
-	params.rcParams.rateControlMode = NV_ENC_PARAMS_RC_CBR_LOWDELAY_HQ;
+	params.rcParams.rateControlMode = NV_ENC_PARAMS_RC_CONSTQP;
 	params.rcParams.averageBitRate = bitrate;
 	params.rcParams.maxBitRate = bitrate;
 	params.rcParams.vbvBufferSize = bitrate / fps;

@@ -212,6 +212,10 @@ video_encoder_va::video_encoder_va(wivrn_vk_bundle & vk, xrt::drivers::wivrn::en
 	encoder_ctx->gop_size = std::numeric_limits<decltype(encoder_ctx->gop_size)>::max();
 	encoder_ctx->hw_frames_ctx = av_buffer_ref(vaapi_frame_ctx.get());
 
+	// fix for CQP
+	assert(av_opt_set(encoder_ctx->priv_data, "rc_mode", "CQP", AV_OPT_SEARCH_CHILDREN) == 0);
+	encoder_ctx->global_quality = 20;
+
 	err = avcodec_open2(encoder_ctx.get(), codec, &opts);
 	av_dict_free(&opts);
 	if (err < 0)
