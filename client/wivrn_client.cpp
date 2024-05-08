@@ -31,6 +31,7 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <android/log.h>
 
 #ifndef IPTOS_DSCP_EF
 // constant is not defined in Android ip.h
@@ -69,6 +70,29 @@ void wivrn_session::handshake()
 		}
 	}
 
+	timeout = std::chrono::steady_clock::now() + 5s;
+
+	// Loop because TCP socket may return partial data
+	while (std::chrono::steady_clock::now() < timeout)
+	{
+		int r = ::poll(&fds, 1, 5000);
+		if (r < 0)
+			throw std::system_error(errno, std::system_category());
+
+		if (r > 0 && (fds.revents & POLLIN))
+		{
+			auto packet = stream.receive();
+			if (not packet)
+				continue;
+			if (std::holds_alternative<to_headset::handshake>(*packet))
+			{
+				return;
+			}
+
+			throw std::runtime_error("Invalid handshake received");
+		}
+	}
+
 	throw std::runtime_error("No handshake received");
 }
 
@@ -92,21 +116,27 @@ void init_stream(T & stream)
 } // namespace
 
 wivrn_session::wivrn_session(in6_addr address, int port) :
-        control(address, port), stream(), address(address)
+        control(address, port), stream(address, port+1), address(address)
 {
+
 	char buffer[100];
 	spdlog::info("Connection to {}:{}", inet_ntop(AF_INET6, &address, buffer, sizeof(buffer)), port);
 	handshake();
-	stream.connect(address, port);
-	init_stream(stream);
+	//stream.connect(address, port);
+	//init_stream(stream);
 }
+static char                                     g_LogTag[] = "SiyaoLog";
+
+#define LOGS(...) __android_log_print(ANDROID_LOG_ERROR, g_LogTag, __VA_ARGS__);
 
 wivrn_session::wivrn_session(in_addr address, int port) :
-        control(address, port), stream(), address(address)
+        control(address, port), stream(address, port+1), address(address)
 {
+	LOGS("address !!!!! %zu", address.s_addr);
+
 	char buffer[100];
 	spdlog::info("Connection to {}:{}", inet_ntop(AF_INET, &address, buffer, sizeof(buffer)), port);
 	handshake();
-	stream.connect(address, port);
-	init_stream(stream);
+//	stream.connect(address, port);
+	//init_stream(stream);
 }

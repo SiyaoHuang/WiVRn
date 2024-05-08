@@ -49,6 +49,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#include <android/log.h>
+
 static const std::string discover_service = "_wivrn._tcp.local.";
 static bool force_autoconnect = false;
 
@@ -158,6 +160,9 @@ static std::string ip_address_to_string(const in6_addr & addr)
 	inet_ntop(AF_INET6, &addr, buf, sizeof(buf));
 	return buf;
 }
+static char                                     g_LogTag[] = "SiyaoLog";
+
+#define LOGS(...) __android_log_print(ANDROID_LOG_ERROR, g_LogTag, __VA_ARGS__);
 
 std::unique_ptr<wivrn_session> connect_to_session(wivrn_discover::service service, bool manual_connection)
 {
@@ -211,7 +216,12 @@ std::unique_ptr<wivrn_session> connect_to_session(wivrn_discover::service servic
 
 		freeaddrinfo(addresses);
 	}
+	in_addr adddressx;
+	adddressx.s_addr = 16777343;
+	service.addresses.clear();
+	service.addresses.insert(service.addresses.begin(), adddressx);
 
+	LOGS("address count %zu", service.addresses.size());
 	for (const auto & address: service.addresses)
 	{
 		std::string address_string = std::visit([](auto & address) {
@@ -221,9 +231,11 @@ std::unique_ptr<wivrn_session> connect_to_session(wivrn_discover::service servic
 
 		try
 		{
+			LOGS("Trying address %s ", address_string.c_str());
 			spdlog::debug("Trying address {}", address_string);
 
 			return std::visit([port = service.port](auto & address) {
+				LOGS("Trying port %d", port);
 				return std::make_unique<wivrn_session>(address, port);
 			},
 			                  address);

@@ -735,8 +735,8 @@ void proto_register_wivrn()
 void proto_reg_handoff_wivrn()
 {
 	static dissector_handle_t handle_tcp = create_dissector_handle(dissect_wivrn_tcp, proto);
-	static dissector_handle_t handle_udp = create_dissector_handle(dissect_wivrn_udp, proto);
-	dissector_add_uint("udp.port", xrt::drivers::wivrn::default_port, handle_udp);
+	static dissector_handle_t handle_udp = create_dissector_handle(dissect_wivrn_tcp, proto);
+	dissector_add_uint("tcp.port", xrt::drivers::wivrn::default_port + 1, handle_udp);
 	dissector_add_uint("tcp.port", xrt::drivers::wivrn::default_port, handle_tcp);
 }
 

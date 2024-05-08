@@ -28,7 +28,7 @@ using namespace xrt::drivers::wivrn;
 class wivrn_session
 {
 	typed_socket<TCP, to_headset::packets, from_headset::packets> control;
-	typed_socket<UDP, to_headset::packets, from_headset::packets> stream;
+	typed_socket<TCP, to_headset::packets, from_headset::packets> stream;
 
 	void handshake();
 

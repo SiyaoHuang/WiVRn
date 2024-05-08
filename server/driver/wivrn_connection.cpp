@@ -25,7 +25,7 @@
 using namespace std::chrono_literals;
 
 wivrn_connection::wivrn_connection(TCP && tcp) :
-        control(std::move(tcp))
+        control(std::move(tcp)),   stream(std::move(tcp))
 {
 	sockaddr_in6 server_address;
 	socklen_t len = sizeof(server_address);
@@ -45,10 +45,11 @@ wivrn_connection::wivrn_connection(TCP && tcp) :
 	// Wait for client to send handshake on UDP
 	auto timeout = std::chrono::steady_clock::now() + std::chrono::seconds(10);
 
-	stream.bind(port);
+	// stream.bind(port);
+
 
 	control.send(to_headset::handshake{});
-
+	stream.send(to_headset::handshake{});
 	while (true)
 	{
 		pollfd fds[2] = {};
@@ -67,34 +68,36 @@ wivrn_connection::wivrn_connection(TCP && tcp) :
 		if (fds[1].revents & (POLLHUP | POLLERR))
 			throw std::runtime_error("Error on control socket");
 
-		if (fds[0].revents & POLLIN)
-		{
-			auto [packet, peer_addr] = stream.receive_from_raw();
-			if (memcmp(&peer_addr.sin6_addr, &client_address.sin6_addr, sizeof(peer_addr.sin6_addr)) == 0)
-			{
-				int client_port = htons(peer_addr.sin6_port);
-				stream.connect(peer_addr.sin6_addr, client_port);
-				U_LOG_D("Stream socket connected, client port %d", client_port);
-				stream.set_send_buffer_size(1024 * 1024 * 5);
-				break;
-			}
-		}
+		break;
 
-		if (std::chrono::steady_clock::now() > timeout)
-		{
-			throw std::runtime_error("No handshake received on stream socket");
-		}
+		// if (fds[0].revents & POLLIN)
+		// {
+		// 	auto [packet, peer_addr] = stream.receive_from_raw();
+		// 	if (memcmp(&peer_addr.sin6_addr, &client_address.sin6_addr, sizeof(peer_addr.sin6_addr)) == 0)
+		// 	{
+		// 		int client_port = htons(peer_addr.sin6_port);
+		// 		stream.connect(peer_addr.sin6_addr, client_port);
+		// 		U_LOG_D("Stream socket connected, client port %d", client_port);
+		// 		stream.set_send_buffer_size(1024 * 1024 * 5);
+		// 		break;
+		// 	}
+		// }
+
+		// if (std::chrono::steady_clock::now() > timeout)
+		// {
+		// 	throw std::runtime_error("No handshake received on stream socket");
+		// }
 	}
 
-	try
-	{
-		// Set Expedited forwarding https://datatracker.ietf.org/doc/html/rfc3246
-		stream.set_tos(IPTOS_DSCP_EF);
-	}
-	catch (std::exception & e)
-	{
-		U_LOG_I("Failed to set IP ToS to Expedited Forwarding: %s", e.what());
-	}
+	// try
+	// {
+	// 	// Set Expedited forwarding https://datatracker.ietf.org/doc/html/rfc3246
+	// 	stream.set_tos(IPTOS_DSCP_EF);
+	// }
+	// catch (std::exception & e)
+	// {
+	// 	U_LOG_I("Failed to set IP ToS to Expedited Forwarding: %s", e.what());
+	// }
 }
 
 std::optional<from_headset::packets> wivrn_connection::poll_control(int timeout)
