@@ -31,7 +31,6 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <android/log.h>
 
 #ifndef IPTOS_DSCP_EF
 // constant is not defined in Android ip.h
@@ -125,9 +124,6 @@ wivrn_session::wivrn_session(in6_addr address, int port) :
 	//stream.connect(address, port);
 	//init_stream(stream);
 }
-static char                                     g_LogTag[] = "SiyaoLog";
-
-#define LOGS(...) __android_log_print(ANDROID_LOG_ERROR, g_LogTag, __VA_ARGS__);
 
 wivrn_session::wivrn_session(in_addr address, int port) :
         control(address, port), stream(address, port+1), address(address)

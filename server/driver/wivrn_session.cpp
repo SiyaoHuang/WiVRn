@@ -83,12 +83,13 @@ void xrt::drivers::wivrn::max_accumulator::send(wivrn_connection & connection)
 	next_sample += std::chrono::seconds(1);
 }
 
-xrt::drivers::wivrn::wivrn_session::wivrn_session(xrt::drivers::wivrn::TCP && tcp) :
-        connection(std::move(tcp))
+xrt::drivers::wivrn::wivrn_session::wivrn_session(xrt::drivers::wivrn::TCP && tcp, xrt::drivers::wivrn::TCP && tcp2) :
+        connection(std::move(tcp), std::move(tcp2))
 {
 }
 
 xrt_result_t xrt::drivers::wivrn::wivrn_session::create_session(xrt::drivers::wivrn::TCP && tcp,
+																xrt::drivers::wivrn::TCP && tcp2,
                                                                 xrt_session_event_sink & event_sink,
                                                                 xrt_system_devices ** out_xsysd,
                                                                 xrt_space_overseer ** out_xspovrs,
@@ -98,7 +99,7 @@ xrt_result_t xrt::drivers::wivrn::wivrn_session::create_session(xrt::drivers::wi
 	std::optional<xrt::drivers::wivrn::from_headset::packets> control;
 	try
 	{
-		self = std::shared_ptr<wivrn_session>(new wivrn_session(std::move(tcp)));
+		self = std::shared_ptr<wivrn_session>(new wivrn_session(std::move(tcp), std::move(tcp2)));
 		while (not(control = self->connection.poll_control(-1)))
 		{
 			// FIXME: timeout

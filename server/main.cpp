@@ -43,6 +43,7 @@ extern "C"
 using namespace xrt::drivers::wivrn;
 
 std::unique_ptr<TCP> tcp;
+std::unique_ptr<TCP> tcp2;
 
 void avahi_set_bool_callback(AvahiWatch * w, int fd, AvahiWatchEvent event, void * userdata)
 {
@@ -210,6 +211,7 @@ int inner_main(int argc, char * argv[])
 			avahi_publisher publisher(hostname().c_str(), "_wivrn._tcp", default_port, TXT);
 
 			TCPListener listener(default_port);
+			TCPListener listener2(default_port+1);
 			bool client_connected = false;
 			bool sigint_received = false;
 
@@ -224,7 +226,10 @@ int inner_main(int argc, char * argv[])
 
 			if (client_connected)
 			{
+				std::cerr << "get tcp 1 "  << std::endl;
 				tcp = std::make_unique<TCP>(listener.accept().first);
+				std::cerr << "get tcp 2 "  << std::endl;
+				tcp2 = std::make_unique<TCP>(listener2.accept().first);
 
 				init_cleanup_functions();
 			}
@@ -283,6 +288,7 @@ int inner_main(int argc, char * argv[])
 			std::cerr << "Server started, PID " << server_pid << std::endl;
 
 			tcp.reset();
+			tcp2.reset();
 
 			int server_fd = pidfd_open(server_pid, 0);
 			int client_fd = client_pid > 0 ? pidfd_open(client_pid, 0) : -1;

@@ -26,6 +26,7 @@
  */
 
 extern std::unique_ptr<TCP> tcp;
+extern std::unique_ptr<TCP> tcp2;
 
 static xrt_result_t
 wivrn_instance_create_system(struct xrt_instance * xinst,
@@ -43,12 +44,14 @@ wivrn_instance_create_system(struct xrt_instance * xinst,
 	struct xrt_system_compositor * xsysc = NULL;
 	auto res = xrt::drivers::wivrn::wivrn_session::create_session(
 	        std::move(*tcp),
+	        std::move(*tcp2),
 	        u_sys->broadcast,
 	        out_xsysd,
 	        out_xspovrs,
 	        out_xsysc);
 	u_system_set_system_compositor(u_sys, *out_xsysc);
 	tcp.reset();
+	tcp2.reset();
 	return res;
 }
 

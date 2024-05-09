@@ -32,7 +32,7 @@ class wivrn_connection
 	typed_socket<TCP, from_headset::packets, to_headset::packets> stream;
 
 public:
-	wivrn_connection(TCP && tcp);
+	wivrn_connection(TCP && tcp, TCP && tcp2);
 	wivrn_connection(const wivrn_connection &) = delete;
 	wivrn_connection & operator=(const wivrn_connection &) = delete;
 

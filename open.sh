@@ -1,0 +1,1 @@
+cmake --build build-server && ./build-server/server/wivrn-server

@@ -21,19 +21,23 @@
 #include "util/u_logging.h"
 #include <arpa/inet.h>
 #include <poll.h>
+#include <iostream>
 
 using namespace std::chrono_literals;
 
-wivrn_connection::wivrn_connection(TCP && tcp) :
-        control(std::move(tcp)),   stream(std::move(tcp))
+wivrn_connection::wivrn_connection(TCP && tcp, TCP && tcp2) :
+        control(std::move(tcp)),   stream(std::move(tcp2))
 {
 	sockaddr_in6 server_address;
 	socklen_t len = sizeof(server_address);
+	std::cout << "server_address : " << ntohs(((struct sockaddr_in6 *)&server_address)->sin6_port) << "," << std::endl;
 	if (getsockname(control.get_fd(), (sockaddr *)&server_address, &len) < 0)
 	{
 		throw std::system_error(errno, std::system_category(), "Cannot get socket port");
 	}
 	int port = ntohs(((struct sockaddr_in6 *)&server_address)->sin6_port);
+	std::cout << "server_address : " << ntohs(((struct sockaddr_in6 *)&server_address)->sin6_port) << ","<< std::endl;
+	std::cout << "server_addressx : " << port << "," << std::endl;
 
 	sockaddr_in6 client_address;
 	len = sizeof(client_address);
@@ -42,14 +46,18 @@ wivrn_connection::wivrn_connection(TCP && tcp) :
 		throw std::system_error(errno, std::system_category(), "Cannot get client address");
 	}
 
+	std::cout << "client_address : " <<  ntohs(((struct sockaddr_in6 *)&client_address)->sin6_port) << ","  << std::endl;
 	// Wait for client to send handshake on UDP
 	auto timeout = std::chrono::steady_clock::now() + std::chrono::seconds(10);
 
 	// stream.bind(port);
 
-
+	int a = 0;
+	std::cout << "hand shake: " << a++ << std::endl;
 	control.send(to_headset::handshake{});
+	std::cout << "hand shake: " << a++ << std::endl;
 	stream.send(to_headset::handshake{});
+	std::cout << "hand shake: " << a++ << std::endl;
 	while (true)
 	{
 		pollfd fds[2] = {};
@@ -58,13 +66,16 @@ wivrn_connection::wivrn_connection(TCP && tcp) :
 		fds[1].events = 0; // only check for errors on control socket
 		fds[1].fd = control.get_fd();
 
+		std::cout << "hand shake: " << a++ << std::endl;
 		int r = ::poll(fds, std::size(fds), 1000);
 		if (r < 0)
 			throw std::system_error(errno, std::system_category());
 
+		std::cout << "hand shake: " << a++ << std::endl;
 		if (fds[0].revents & (POLLHUP | POLLERR))
 			throw std::runtime_error("Error on stream socket");
 
+		std::cout << "hand shake: " << a++ << std::endl;
 		if (fds[1].revents & (POLLHUP | POLLERR))
 			throw std::runtime_error("Error on control socket");
 

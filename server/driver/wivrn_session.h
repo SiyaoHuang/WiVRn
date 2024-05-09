@@ -86,10 +86,11 @@ class wivrn_session : public std::enable_shared_from_this<wivrn_session>
 
 	std::shared_ptr<audio_device> audio_handle;
 
-	wivrn_session(TCP && tcp);
+	wivrn_session(TCP && tcp, TCP && tcp2);
 
 public:
 	static xrt_result_t create_session(TCP && tcp,
+	                                   TCP && tcp2,
 	                                   xrt_session_event_sink & event_synk,
 	                                   xrt_system_devices ** out_xsysd,
 	                                   xrt_space_overseer ** out_xspovrs,

@@ -22,6 +22,10 @@
 #include "wivrn_packets.h"
 #include "wivrn_sockets.h"
 #include <poll.h>
+#include <android/log.h>
+static char                                     g_LogTag[] = "SiyaoLog";
+
+#define LOGS(...) __android_log_print(ANDROID_LOG_ERROR, g_LogTag, __VA_ARGS__);
 
 using namespace xrt::drivers::wivrn;
 
@@ -69,6 +73,8 @@ public:
 
 		if (fds[1].revents & (POLLHUP | POLLERR))
 			throw std::runtime_error("Error on control socket");
+		int a = 0;
+		LOGS("receive packet %d", a++);
 
 		if (fds[0].revents & POLLIN)
 		{
@@ -77,12 +83,14 @@ public:
 				std::visit(std::forward<T>(visitor), std::move(*packet));
 		}
 
+		LOGS("receive packet %d", a++);
 		if (fds[1].revents & POLLIN)
 		{
 			auto packet = control.receive();
 			if (packet)
 				std::visit(std::forward<T>(visitor), std::move(*packet));
 		}
+		LOGS("receive packet %d", a++);
 
 		return r;
 	}
